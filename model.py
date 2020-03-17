@@ -114,12 +114,12 @@ class DCGAN(object):
     else:
       image_dims = [self.input_height, self.input_width, self.c_dim]
 
-    self.inputs = tf.placeholder(
+    self.inputs = tf.compat.v1.placeholder(
       tf.float32, [self.batch_size] + image_dims, name='real_images')
 
     inputs = self.inputs
 
-    self.z = tf.placeholder(
+    self.z = tf.compat.v1.placeholder(
       tf.float32, [None, self.z_dim], name='z')
     self.z_sum = histogram_summary("z", self.z)
 
@@ -153,20 +153,20 @@ class DCGAN(object):
     self.g_loss_sum = scalar_summary("g_loss", self.g_loss)
     self.d_loss_sum = scalar_summary("d_loss", self.d_loss)
 
-    t_vars = tf.trainable_variables()
+    t_vars = tf.compat.v1.trainable_variables()
 
     self.d_vars = [var for var in t_vars if 'd_' in var.name]
     self.g_vars = [var for var in t_vars if 'g_' in var.name]
 
-    self.saver = tf.train.Saver(max_to_keep=self.max_to_keep)
+    self.saver = tf.compat.v1.train.Saver(max_to_keep=self.max_to_keep)
 
   def train(self, config):
-    d_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
+    d_optim = tf.compat.v1.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
               .minimize(self.d_loss, var_list=self.d_vars)
-    g_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
+    g_optim = tf.compat.v1.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
               .minimize(self.g_loss, var_list=self.g_vars)
     try:
-      tf.global_variables_initializer().run()
+      tf.compat.v1.global_variables_initializer().run()
     except:
       tf.initialize_all_variables().run()
 
@@ -331,7 +331,7 @@ class DCGAN(object):
         counter += 1
         
   def discriminator(self, image, y=None, reuse=False):
-    with tf.variable_scope("discriminator") as scope:
+    with tf.compat.v1.variable_scope("discriminator") as scope:
       if reuse:
         scope.reuse_variables()
 
@@ -362,7 +362,7 @@ class DCGAN(object):
         return tf.nn.sigmoid(h3), h3
 
   def generator(self, z, y=None):
-    with tf.variable_scope("generator") as scope:
+    with tf.compat.v1.variable_scope("generator") as scope:
       if not self.y_dim:
         s_h, s_w = self.output_height, self.output_width
         s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
@@ -421,7 +421,7 @@ class DCGAN(object):
             deconv2d(h2, [self.batch_size, s_h, s_w, self.c_dim], name='g_h3'))
 
   def sampler(self, z, y=None):
-    with tf.variable_scope("generator") as scope:
+    with tf.compat.v1.variable_scope("generator") as scope:
       scope.reuse_variables()
 
       if not self.y_dim:

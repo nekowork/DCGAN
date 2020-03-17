@@ -35,7 +35,7 @@ def timestamp(s='%Y%m%d.%H%M%S', ts=None):
   return st
   
 def show_all_variables():
-  model_vars = tf.trainable_variables()
+  model_vars = tf.compat.v1.trainable_variables()
   slim.model_analyzer.analyze_vars(model_vars, print_info=True)
 
 def get_image(image_path, input_height, input_width,
