@@ -1,6 +1,6 @@
-#DCGAN
+# DCGAN
 ---
-##运行环境
+## 运行环境
 python 3.7 64bit
 
 tensorflow 1.15.2
@@ -10,11 +10,13 @@ scipy 1.4.1
 scikit-image 0.16.2
 
 ---
-##文件结构
+## 文件结构
 
 ---
-##启动参数
+## 启动参数
+
 --epoch "Epoch to train [25]"
+
 --learning_rate "Learning rate of for adam [0.0002]"
 
 --beta1 "Momentum term of adam [0.5]"
