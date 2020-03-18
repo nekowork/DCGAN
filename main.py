@@ -124,7 +124,7 @@ def main(_):
         raise Exception("Checkpoint not found in " + FLAGS.checkpoint_dir)
 
 
-    # to_json("./web/js/layers.js", [dcgan.h0_w, dcgan.h0_b, dcgan.g_bn0],
+    # to_json("./webdata/layers.js", [dcgan.h0_w, dcgan.h0_b, dcgan.g_bn0],
     #                 [dcgan.h1_w, dcgan.h1_b, dcgan.g_bn1],
     #                 [dcgan.h2_w, dcgan.h2_b, dcgan.g_bn2],
     #                 [dcgan.h3_w, dcgan.h3_b, dcgan.g_bn3],
