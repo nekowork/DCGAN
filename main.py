@@ -4,7 +4,7 @@ import numpy as np
 import json
 
 from model import DCGAN
-from utils import pp, visualize, to_json, show_all_variables, expand_path, timestamp
+from utils import pp, visualize, show_all_variables, expand_path, timestamp
 
 import tensorflow as tf
 
@@ -31,8 +31,8 @@ flags.DEFINE_boolean("visualize", True, "True for visualizing, False for nothing
 flags.DEFINE_boolean("export", False, "True for exporting with new batch size")
 flags.DEFINE_boolean("freeze", False, "True for exporting with new batch size")
 flags.DEFINE_integer("max_to_keep", 1, "maximum number of checkpoints to keep")
-flags.DEFINE_integer("sample_freq", 10, "sample every this many iterations")#simple图像导出
-flags.DEFINE_integer("ckpt_freq", 200, "save checkpoint every this many iterations")
+flags.DEFINE_integer("sample_freq", 50, "sample every this many iterations")#simple图像导出
+flags.DEFINE_integer("ckpt_freq", 100, "save checkpoint every this many iterations")
 flags.DEFINE_integer("z_dim", 100, "dimensions of z")
 flags.DEFINE_string("z_dist", "uniform_signed", "'normal01' or 'uniform_unsigned' or uniform_signed")
 flags.DEFINE_boolean("G_img_sum", True, "Save generator image summaries in log")
@@ -69,50 +69,29 @@ def main(_):
   with open(os.path.join(FLAGS.out_dir, 'FLAGS.json'), 'w') as f:
     flags_dict = {k:FLAGS[k].value for k in FLAGS}
     json.dump(flags_dict, f, indent=4, sort_keys=True, ensure_ascii=False)
-  
 
   #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
   run_config = tf.compat.v1.ConfigProto()
   run_config.gpu_options.allow_growth=True
 
   with tf.compat.v1.Session(config=run_config) as sess:
-    if FLAGS.dataset == 'mnist':
-      dcgan = DCGAN(
-          sess,
-          input_width=FLAGS.input_width,
-          input_height=FLAGS.input_height,
-          output_width=FLAGS.output_width,
-          output_height=FLAGS.output_height,
-          batch_size=FLAGS.batch_size,
-          sample_num=FLAGS.batch_size,
-          y_dim=10,
-          z_dim=FLAGS.z_dim,
-          dataset_name=FLAGS.dataset,
-          input_fname_pattern=FLAGS.input_fname_pattern,
-          crop=FLAGS.crop,
-          checkpoint_dir=FLAGS.checkpoint_dir,
-          sample_dir=FLAGS.sample_dir,
-          data_dir=FLAGS.data_dir,
-          out_dir=FLAGS.out_dir,
-          max_to_keep=FLAGS.max_to_keep)
-    else:
-      dcgan = DCGAN(
-          sess,
-          input_width=FLAGS.input_width,
-          input_height=FLAGS.input_height,
-          output_width=FLAGS.output_width,
-          output_height=FLAGS.output_height,
-          batch_size=FLAGS.batch_size,
-          sample_num=FLAGS.batch_size,
-          z_dim=FLAGS.z_dim,
-          dataset_name=FLAGS.dataset,
-          input_fname_pattern=FLAGS.input_fname_pattern,
-          crop=FLAGS.crop,
-          checkpoint_dir=FLAGS.checkpoint_dir,
-          sample_dir=FLAGS.sample_dir,
-          data_dir=FLAGS.data_dir,
-          out_dir=FLAGS.out_dir,
-          max_to_keep=FLAGS.max_to_keep)
+    dcgan = DCGAN(
+        sess,
+        input_width=FLAGS.input_width,
+        input_height=FLAGS.input_height,
+        output_width=FLAGS.output_width,
+        output_height=FLAGS.output_height,
+        batch_size=FLAGS.batch_size,
+        sample_num=FLAGS.batch_size,
+        z_dim=FLAGS.z_dim,
+        dataset_name=FLAGS.dataset,
+        input_fname_pattern=FLAGS.input_fname_pattern,
+        crop=FLAGS.crop,
+        checkpoint_dir=FLAGS.checkpoint_dir,
+        sample_dir=FLAGS.sample_dir,
+        data_dir=FLAGS.data_dir,
+        out_dir=FLAGS.out_dir,
+        max_to_keep=FLAGS.max_to_keep)
 
     show_all_variables()
 
@@ -122,14 +101,6 @@ def main(_):
       load_success, load_counter = dcgan.load(FLAGS.checkpoint_dir)
       if not load_success:
         raise Exception("Checkpoint not found in " + FLAGS.checkpoint_dir)
-
-
-    # to_json("./webdata/layers.js", [dcgan.h0_w, dcgan.h0_b, dcgan.g_bn0],
-    #                 [dcgan.h1_w, dcgan.h1_b, dcgan.g_bn1],
-    #                 [dcgan.h2_w, dcgan.h2_b, dcgan.g_bn2],
-    #                 [dcgan.h3_w, dcgan.h3_b, dcgan.g_bn3],
-    #                 [dcgan.h4_w, dcgan.h4_b, None])
-
     # Below is codes for visualization
       if FLAGS.export:
         export_dir = os.path.join(FLAGS.checkpoint_dir, 'export_b'+str(FLAGS.batch_size))
