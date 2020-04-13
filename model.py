@@ -81,20 +81,16 @@ class DCGAN(object):
     self.out_dir = out_dir
     self.max_to_keep = max_to_keep
 
-    if self.dataset_name == 'mnist':
-      self.data_X, self.data_y = self.load_mnist()
-      self.c_dim = self.data_X[0].shape[-1]
+    data_path = os.path.join(self.data_dir, self.dataset_name, self.input_fname_pattern)
+    self.data = glob(data_path)
+    if len(self.data) == 0:
+      raise Exception("[!] No data found in '" + data_path + "'")
+    np.random.shuffle(self.data)
+    imreadImg = imread(self.data[0])
+    if len(imreadImg.shape) >= 3: #check if image is a non-grayscale image by checking channel number
+      self.c_dim = imread(self.data[0]).shape[-1]
     else:
-      data_path = os.path.join(self.data_dir, self.dataset_name, self.input_fname_pattern)
-      self.data = glob(data_path)
-      if len(self.data) == 0:
-        raise Exception("[!] No data found in '" + data_path + "'")
-      np.random.shuffle(self.data)
-      imreadImg = imread(self.data[0])
-      if len(imreadImg.shape) >= 3: #check if image is a non-grayscale image by checking channel number
-        self.c_dim = imread(self.data[0]).shape[-1]
-      else:
-        self.c_dim = 1
+      self.c_dim = 1
 
       if len(self.data) < self.batch_size:
         raise Exception("[!] Entire dataset size is less than the configured batch_size")
@@ -309,7 +305,6 @@ class DCGAN(object):
         s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
         s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
-        # project `z` and reshape
         self.z_, self.h0_w, self.h0_b = linear(
             z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin', with_w=True)
 
@@ -338,7 +333,6 @@ class DCGAN(object):
         s_h2, s_h4 = int(s_h/2), int(s_h/4)
         s_w2, s_w4 = int(s_w/2), int(s_w/4)
 
-        # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
         yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
         z = concat([z, y], 1)
 
@@ -370,7 +364,6 @@ class DCGAN(object):
         s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
         s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
-        # project `z` and reshape
         h0 = tf.reshape(
             linear(z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin'),
             [-1, s_h16, s_w16, self.gf_dim * 8])
@@ -393,7 +386,6 @@ class DCGAN(object):
         s_h2, s_h4 = int(s_h/2), int(s_h/4)
         s_w2, s_w4 = int(s_w/2), int(s_w/4)
 
-        # yb = tf.reshape(y, [-1, 1, 1, self.y_dim])
         yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
         z = concat([z, y], 1)
 
@@ -410,43 +402,6 @@ class DCGAN(object):
         h2 = conv_cond_concat(h2, yb)
 
         return tf.nn.sigmoid(deconv2d(h2, [self.batch_size, s_h, s_w, self.c_dim], name='g_h3'))
-
-  def load_mnist(self):
-    data_dir = os.path.join(self.data_dir, self.dataset_name)
-    
-    fd = open(os.path.join(data_dir,'train-images-idx3-ubyte'))
-    loaded = np.fromfile(file=fd,dtype=np.uint8)
-    trX = loaded[16:].reshape((60000,28,28,1)).astype(np.float)
-
-    fd = open(os.path.join(data_dir,'train-labels-idx1-ubyte'))
-    loaded = np.fromfile(file=fd,dtype=np.uint8)
-    trY = loaded[8:].reshape((60000)).astype(np.float)
-
-    fd = open(os.path.join(data_dir,'t10k-images-idx3-ubyte'))
-    loaded = np.fromfile(file=fd,dtype=np.uint8)
-    teX = loaded[16:].reshape((10000,28,28,1)).astype(np.float)
-
-    fd = open(os.path.join(data_dir,'t10k-labels-idx1-ubyte'))
-    loaded = np.fromfile(file=fd,dtype=np.uint8)
-    teY = loaded[8:].reshape((10000)).astype(np.float)
-
-    trY = np.asarray(trY)
-    teY = np.asarray(teY)
-    
-    X = np.concatenate((trX, teX), axis=0)
-    y = np.concatenate((trY, teY), axis=0).astype(np.int)
-    
-    seed = 547
-    np.random.seed(seed)
-    np.random.shuffle(X)
-    np.random.seed(seed)
-    np.random.shuffle(y)
-    
-    y_vec = np.zeros((len(y), self.y_dim), dtype=np.float)
-    for i, label in enumerate(y):
-      y_vec[i,y[i]] = 1.0
-    
-    return X/255.,y_vec
 
   @property
   def model_dir(self):
